@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pay via Platform</title>
+<style>body{font-family:sans-serif;padding:15px;background:#f4f5ef} .box{background:white;padding:20px;border-radius:16px} button{width:100%;padding:14px;background:#153d2f;color:white;border:none;border-radius:12px;margin-top:10px;font-weight:bold} input,select{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #ccc}</style>
+</head>
+<body>
+<div class="box">
+<h2>Secure Pay via TBF Platform</h2>
+<p id="prod"></p>
+<p>All payments pass via platform. Admin deducts fee auto.</p>
+<input id="buyerPhone" placeholder="Your MoMo number">
+<select id="payMethod"><option value="MTN">MTN</option><option value="Airtel">Airtel</option></select>
+<input id="amount" type="number" placeholder="Amount UGX">
+<input id="buyerTx" placeholder="Your MoMo Transaction ID after paying to 0793124670 / 0749743839">
+<button onclick="pay()">Confirm Payment</button>
+<p id="result"></p>
+<p style="font-size:12px">Seller tier: <span id="tierInfo"></span> | Fee: <span id="feeInfo"></span><br>Admin receives fee at: 0793124670 (MTN) Kagoya Evelyn / 0749743839 (Airtel) Nakazigye Robinah</p>
+</div>
+<script>
+let params=new URLSearchParams(location.search);
+let productTitle=params.get('title')||'Product';
+let sellerName=params.get('seller')||'Unknown';
+let price=params.get('price')||'';
+document.getElementById('prod').innerHTML=`<b>${productTitle}</b> by ${sellerName}<br>Price: UGX ${price}`;
+document.getElementById('amount').value=price;
+// detect seller tier
+let tier='hot'; // default
+try{
+let approved=localStorage.getItem('tbf_approved_'+sellerName);
+if(approved && approved.includes('spotlight')) tier='spotlight';
+}catch(e){}
+let feePercent = (tier==='spotlight') ? 5 : 1;
+document.getElementById('tierInfo').innerText=tier;
+document.getElementById('feeInfo').innerText=feePercent+'%';
+
+function pay(){
+ let total=parseFloat(document.getElementById('amount').value);
+ let method=document.getElementById('payMethod').value;
+ let fee=Math.round(total*feePercent/100);
+ let toSeller=total-fee;
+ let adminNumber = (method==='MTN') ? '0793124670' : '0749743839';
+ let order={
+  id:Date.now(), productTitle, sellerName, buyerPhone:document.getElementById('buyerPhone').value,
+  total, fee, feePercent, toSeller, toAdmin:fee, adminNumber, method,
+  buyerTx:document.getElementById('buyerTx').value, date:new Date().toLocaleString()
+ };
+ let orders=JSON.parse(localStorage.getItem('tbf_orders')||'[]');
+ orders.push(order);
+ localStorage.setItem('tbf_orders',JSON.stringify(orders));
+ document.getElementById('result').innerHTML=`✅ Payment recorded!<br>Total: ${total}<br>Fee ${feePercent}% = ${fee} UGX goes to Admin ${adminNumber}<br>Seller gets: ${toSeller} UGX<br>Admin notified!`;
+}
+</script>
+</body>
+</html>
