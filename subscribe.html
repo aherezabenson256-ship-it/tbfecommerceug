@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subscribe to Sell - TBF</title>
+<style>
+body{font-family:sans-serif;background:#f4f5ef;padding:15px;color:#153d2f}
+.card{background:white;border-radius:16px;padding:18px;margin:15px 0;box-shadow:0 4px 12px rgba(0,0,0,0.08);border:2px solid transparent}
+.card.active{border-color:#153d2f;background:#f0ffea}
+.card h3{margin:5px 0}
+button{width:100%;padding:14px;border-radius:12px;border:none;background:#153d2f;color:white;font-weight:bold;margin-top:10px}
+input,select{width:100%;padding:12px;margin:8px 0;border-radius:10px;border:1px solid #ccc}
+.badge{background:#ffeb3b;padding:4px 10px;border-radius:20px;font-size:12px}
+</style>
+</head>
+<body>
+<h2>Choose Your Selling Plan</h2>
+<p>Pay to: <b>MTN 0793124670</b> (KAGOYA EVELYN) / <b>Airtel 0749743839</b> (NAKAZIGYE ROBINAH)</p>
+
+<div class="card" onclick="selectTier('quick',0)">
+<h3>🚀 Quick Boost <span class="badge">FREE 7 Days</span></h3>
+<p>Free trial, product on top for 7 days only</p>
+<b>UGX 0</b>
+</div>
+
+<div class="card" onclick="selectTier('hot',10000)">
+<h3>🔥 Hot Deal - 2 Weeks</h3>
+<p>On top 14 days + Verified badge</p>
+<b>UGX 10,000</b>
+</div>
+
+<div class="card active" onclick="selectTier('spotlight',25000)">
+<h3>⭐ Top Spotlight - ONE TIME</h3>
+<p>Pay once, sell forever + only 5% commission vs 1% for others</p>
+<b>UGX 25,000 ONE TIME</b>
+</div>
+
+<hr>
+<h3>Confirm Payment</h3>
+<select id="tier">
+<option value="quick">Quick Boost - Free</option>
+<option value="hot">Hot Deal - 10k</option>
+<option value="spotlight">Top Spotlight - 25k</option>
+</select>
+<select id="method">
+<option value="MTN">MTN to 0793124670</option>
+<option value="Airtel">Airtel to 0749743839</option>
+</select>
+<input id="phone" placeholder="Your MoMo number that sent money">
+<input id="txid" placeholder="Transaction ID e.g 1234567890">
+<input id="sellerName" placeholder="Your Shop Name">
+<button onclick="submitSub()">Submit For Approval</button>
+<p id="status"></p>
+
+<script>
+let selectedPrice=25000;
+let selectedTier='spotlight';
+function selectTier(t,p){
+  selectedTier=t; selectedPrice=p;
+  document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('tier').value=t;
+}
+function submitSub(){
+  let data={
+    id: Date.now(),
+    seller: document.getElementById('sellerName').value,
+    tier: document.getElementById('tier').value,
+    price: selectedPrice,
+    method: document.getElementById('method').value,
+    phone: document.getElementById('phone').value,
+    txid: document.getElementById('txid').value,
+    status: 'pending',
+    date: new Date().toLocaleString()
+  };
+  if(!data.txid || !data.seller){alert('Enter shop name and Transaction ID');return;}
+  let all=JSON.parse(localStorage.getItem('tbf_subs')||'[]');
+  all.push(data);
+  localStorage.setItem('tbf_subs',JSON.stringify(all));
+  localStorage.setItem('tbf_current_seller',JSON.stringify(data));
+  document.getElementById('status').innerHTML='✅ Sent to Admin! Wait for approval in 5 mins. You will be able to post.';
+  setTimeout(()=>{window.location.href='/';},2000);
+}
+</script>
+</body>
+</html>
