@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Dashboard - TBF</title>
+<style>
+body{font-family:sans-serif;padding:15px;background:#0f2219;color:white}
+.card{background:#1a3a2a;padding:15px;border-radius:12px;margin:10px 0}
+button{padding:8px 14px;border-radius:8px;border:none;margin:3px;font-weight:bold}
+.approve{background:#4caf50;color:white} .reject{background:#f44336;color:white}
+table{width:100%;background:white;color:black;border-radius:12px;overflow:hidden}
+th,td{padding:10px;text-align:left;font-size:13px;border-bottom:1px solid #eee}
+.login{max-width:350px;margin:80px auto;background:white;color:black;padding:25px;border-radius:16px}
+</style>
+</head>
+<body>
+
+<div id="loginBox" class="login">
+<h2>Admin Only</h2>
+<input id="pass" type="password" placeholder="Enter Admin Password">
+<button onclick="login()" style="width:100%;background:#153d2f;color:white;padding:12px">Login</button>
+<p style="font-size:12px">Default: TBF2025! (Change in code)</p>
+</div>
+
+<div id="dash" style="display:none">
+<h2>TBF Admin - Commission Dashboard</h2>
+<p>Total Commission Today: <b id="totalComm">UGX 0</b></p>
+<p>Money goes to: MTN 0793124670 / Airtel 0749743839</p>
+
+<h3>1. New Subscribers Waiting Approval</h3>
+<table><thead><tr><th>Seller</th><th>Tier</th><th>Amount</th><th>TxID</th><th>Method</th><th>Action</th></tr></thead><tbody id="subs"></tbody></table>
+
+<h3>2. Buyer Payments - Live Orders</h3>
+<table><thead><tr><th>Buyer</th><th>Product</th><th>Total</th><th>Fee (1% or 5%)</th><th>To Seller</th><th>To You</th></tr></thead><tbody id="orders"></tbody></table>
+</div>
+
+<script>
+function login(){
+ if(document.getElementById('pass').value==='TBF2025!'){
+  document.getElementById('loginBox').style.display='none';
+  document.getElementById('dash').style.display='block';
+  load();
+ } else alert('Wrong password');
+}
+function load(){
+ let subs=JSON.parse(localStorage.getItem('tbf_subs')||'[]');
+ document.getElementById('subs').innerHTML=subs.map(s=>`
+  <tr><td>${s.seller}<br><small>${s.phone}</small></td><td>${s.tier}</td><td>${s.price}</td><td>${s.txid}</td><td>${s.method}</td>
+  <td><button class="approve" onclick="approve(${s.id})">Approve</button><button class="reject" onclick="reject(${s.id})">Reject</button><br><small>${s.status}</small></td></tr>
+ `).join('')||'<tr><td colspan=6>No subs</td></tr>';
+
+ let orders=JSON.parse(localStorage.getItem('tbf_orders')||'[]');
+ let total=0;
+ document.getElementById('orders').innerHTML=orders.map(o=>{
+   total+=o.fee;
+   return `<tr><td>${o.buyerPhone}</td><td>${o.productTitle}</td><td>${o.total}</td><td>${o.fee} (${o.feePercent}%)</td><td>${o.toSeller}</td><td style="color:green;font-weight:bold">${o.toAdmin} to ${o.adminNumber}</td></tr>`
+ }).join('')||'<tr><td colspan=6>No orders yet</td></tr>';
+ document.getElementById('totalComm').innerText='UGX '+total.toLocaleString();
+}
+function approve(id){
+ let subs=JSON.parse(localStorage.getItem('tbf_subs')||'[]');
+ let s=subs.find(x=>x.id===id); s.status='approved';
+ localStorage.setItem('tbf_subs',JSON.stringify(subs));
+ // give seller permission
+ localStorage.setItem('tbf_approved_'+s.seller,'approved_'+s.tier);
+ alert('Approved '+s.seller+' for '+s.tier);
+ load();
+}
+function reject(id){
+ let subs=JSON.parse(localStorage.getItem('tbf_subs')||'[]');
+ subs=subs.filter(x=>x.id!==id);
+ localStorage.setItem('tbf_subs',JSON.stringify(subs));
+ load();
+}
+</script>
+</body>
+</html>
